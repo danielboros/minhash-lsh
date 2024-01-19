@@ -91,7 +91,7 @@ type entry struct {
 
 // hashTable is a look-up table implemented as a slice sorted by hash keys.
 // Look-up operation is implemented using binary search.
-type hashTable []entry
+type hashTable []*entry
 
 func (h hashTable) Len() int           { return len(h) }
 func (h hashTable) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
@@ -170,7 +170,7 @@ func (f *MinhashLSH) Add(key interface{}, sig []uint64) {
 	hs := f.hashKeys(sig)
 	// Insert keys into the hash tables by appending.
 	for i := range f.hashTables {
-		f.hashTables[i] = append(f.hashTables[i], entry{hs[i], key})
+		f.hashTables[i] = append(f.hashTables[i], &entry{hs[i], key})
 	}
 }
 
