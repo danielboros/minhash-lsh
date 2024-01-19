@@ -105,7 +105,7 @@ func (h hashTable) Less(i, j int) bool { return h[i].hashKey < h[j].hashKey }
 type MinhashLSH struct {
 	k              int
 	l              int
-	hashTables     []hashTable
+	hashTables     []*hashTable
 	hashKeyFunc    hashKeyFunc
 	hashValueSize  int
 	numIndexedKeys int
@@ -113,9 +113,10 @@ type MinhashLSH struct {
 
 func newMinhashLSH(threshold float64, numHash, hashValueSize, initSize int) *MinhashLSH {
 	k, l, _, _ := optimalKL(numHash, threshold)
-	hashTables := make([]hashTable, l)
+	hashTables := make([]*hashTable, l)
 	for i := range hashTables {
-		hashTables[i] = make(hashTable, 0, initSize)
+		ht := make(hashTable, 0, initSize)
+		hashTables[i] = &ht
 	}
 	return &MinhashLSH{
 		k:              k,
@@ -170,7 +171,7 @@ func (f *MinhashLSH) Add(key interface{}, sig []uint64) {
 	hs := f.hashKeys(sig)
 	// Insert keys into the hash tables by appending.
 	for i := range f.hashTables {
-		f.hashTables[i] = append(f.hashTables[i], &entry{hs[i], key})
+		*f.hashTables[i] = append(*f.hashTables[i], &entry{hs[i], key})
 	}
 }
 
@@ -179,7 +180,7 @@ func (f *MinhashLSH) Index() {
 	for i := range f.hashTables {
 		sort.Sort(f.hashTables[i])
 	}
-	f.numIndexedKeys = len(f.hashTables[0])
+	f.numIndexedKeys = len(*f.hashTables[0])
 }
 
 // Query returns candidate keys given the query signature.
@@ -199,7 +200,7 @@ func (f *MinhashLSH) query(sig []uint64) map[interface{}]bool {
 	// Query hash tables using binary search.
 	for i := 0; i < f.l; i++ {
 		// Only search over the indexed keys.
-		hashTable := f.hashTables[i][:f.numIndexedKeys]
+		hashTable := (*f.hashTables[i])[:f.numIndexedKeys]
 		hashKey := hashKeys[i]
 		k := sort.Search(len(hashTable), func(x int) bool {
 			return hashTable[x].hashKey >= hashKey

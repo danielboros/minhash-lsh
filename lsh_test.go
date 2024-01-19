@@ -52,7 +52,7 @@ func Test_MinhashLSH(t *testing.T) {
 	f.Index()
 	for i := range f.hashTables {
 		// Hash tables should have size 3
-		if len(f.hashTables[i]) != 3 {
+		if len(*f.hashTables[i]) != 3 {
 			t.Fatal(f.hashTables[i])
 		}
 	}
